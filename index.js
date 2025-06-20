@@ -30,7 +30,7 @@ Respond in JSON.
 
     // استدعاء API لـ Hugging Face
     const hfRes = await fetch(
-        "https://api-inference.huggingface.co/models/mistralai/mistral-7b-instruct-v0.1",
+        "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3",
       {
         method: "POST",
         headers: {
@@ -64,7 +64,7 @@ app.post("/api/chat", async (req, res) => {
     const prompt = messages.map(m=>`${m.role.toUpperCase()}: ${m.content}`).join("\n") + "\nASSISTANT:";
 
     const hfRes = await fetch(
-        "https://api-inference.huggingface.co/models/mistralai/mistral-7b-instruct-v0.1",
+        "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3",
       {
         method: "POST",
         headers: {
