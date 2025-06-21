@@ -37,7 +37,7 @@ Respond in JSON.
 
     // استدعاء Mistral عبر HF Inference API
     const hfRes = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Magistral-Small-2506", 
+      "https://huggingface.co/models/mistralai/Magistral-Small-2506", 
       {
         method: "POST",
         headers: {
@@ -92,7 +92,7 @@ app.post("/api/chat", async (req, res, next) => {
       "\nASSISTANT:";
 
     const hfRes = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Magistral-Small-2506", 
+      "https://huggingface.co/models/mistralai/Magistral-Small-2506", 
       {
         method: "POST",
         headers: {
