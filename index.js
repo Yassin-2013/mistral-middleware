@@ -33,7 +33,7 @@ Respond in JSON.
 `;
 
     const hfRes = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Devstral-Small-2505",
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
       {
         method: "POST",
         headers: {
@@ -89,7 +89,7 @@ app.post("/api/chat", async (req, res, next) => {
       "\nASSISTANT:";
 
     const hfRes = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Devstral-Small-2505",
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
       {
         method: "POST",
         headers: {
