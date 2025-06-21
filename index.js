@@ -99,7 +99,7 @@ app.post("/api/chat", async (req, res, next) => {
           Authorization: `Bearer ${process.env.HF_API_TOKEN}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 200 } })
+        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 20000000 } })
       }
     );
 
