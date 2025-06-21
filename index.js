@@ -7,10 +7,11 @@ const fetch   = require("node-fetch"); // تأكد أنك ثبت node-fetch@2
 const app = express();
 const port = process.env.PORT || 10000;
 
+// Middleware
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// تسجيل الطلبات
+// Logging للمسارات والـ body
 app.use((req, res, next) => {
   console.log(`→ ${req.method} ${req.url}`, "BODY:", req.body || "");
   next();
@@ -40,10 +41,7 @@ Respond in JSON.
           Authorization: `Bearer ${process.env.HF_API_TOKEN}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: { max_new_tokens: 300 }
-        })
+        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 300 } })
       }
     );
 
@@ -53,6 +51,7 @@ Respond in JSON.
     }
 
     const hfData = await hfRes.json();
+    // استخراج النص المولد
     const textOutput =
       typeof hfData === "string"
         ? hfData
@@ -65,9 +64,13 @@ Respond in JSON.
         .json({ success: false, error: "No generated_text in response", raw: hfData });
     }
 
+    // اقتطاع أي نص قبل أول { لتحويل JSON
+    const idx = textOutput.indexOf("{");
+    const jsonText = idx >= 0 ? textOutput.slice(idx) : textOutput;
+
     let analysis;
     try {
-      analysis = JSON.parse(textOutput.trim());
+      analysis = JSON.parse(jsonText.trim());
     } catch {
       return res
         .status(200)
@@ -96,10 +99,7 @@ app.post("/api/chat", async (req, res, next) => {
           Authorization: `Bearer ${process.env.HF_API_TOKEN}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: { max_new_tokens: 200 }
-        })
+        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 200 } })
       }
     );
 
@@ -121,6 +121,7 @@ app.post("/api/chat", async (req, res, next) => {
         .json({ success: false, error: "No generated_text in response", raw: hfData });
     }
 
+    // لا نحتاج JSON.parse هنا إذ الرد نص
     res.json({ success: true, reply: { role: "assistant", content: content.trim() } });
   } catch (err) {
     next(err);
@@ -132,12 +133,13 @@ app.get("/", (req, res) => {
   res.send("Mistral-7B Middleware is running.");
 });
 
-// معالج الأخطاء
+// Error handler
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ success: false, error: err.message });
 });
 
+// بدء الخادم
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
