@@ -41,7 +41,7 @@ Respond in JSON.
           Authorization: `Bearer ${process.env.HF_API_TOKEN}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 300 } })
+        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 30000000 } })
       }
     );
 
