@@ -7,7 +7,7 @@ const fetch   = require("node-fetch"); // تأكد أنك ثبت node-fetch@2
 
 // 2. تهيئة Express
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 10000;
 
 // 3. Middleware عامة
 app.use(cors({ origin: "*" }));
@@ -37,7 +37,7 @@ Respond in JSON.
 
     // استدعاء Mistral عبر HF Inference API
     const hfRes = await fetch(
-      "https://api‑inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", 
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
       {
         method: "POST",
         headers: {
@@ -92,7 +92,7 @@ app.post("/api/chat", async (req, res, next) => {
       "\nASSISTANT:";
 
     const hfRes = await fetch(
-      "https://api‑inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", 
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
       {
         method: "POST",
         headers: {
