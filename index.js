@@ -7,7 +7,7 @@ const fetch   = require("node-fetch"); // تأكد أنك ثبت node-fetch@2
 
 // 2. تهيئة Express
 const app = express();
-const port = process.env.PORT || 10000;
+const port = process.env.PORT || 4000;
 
 // 3. Middleware عامة
 app.use(cors({ origin: "*" }));
