@@ -1,12 +1,37 @@
-// … أعلى الملف كما هو
+// index.js
 
+// 1. استيراد الحزم
+const express = require("express");
+const cors    = require("cors");
+const fetch   = require("node-fetch"); // تأكد أنك ثبت node‑fetch@2
+
+// 2. تهيئة Express
+const app = express();
+const port = process.env.PORT || 3000;
+
+// 3. Middleware
+app.use(cors({ origin: "*" }));
+app.use(express.json());
+
+// 4. نقطة الـ Analyze
 app.post("/api/analyze", async (req, res) => {
   try {
     const { userId, answers } = req.body;
-    const prompt = `…`; // كما صيغناه سابقًا
+    const prompt = `
+User ID: ${userId}
+IQ Test Data:
+${answers.map(a => `- Q${a.questionId}: ${a.correct ? "✔️" : "❌"}, time ${a.responseTime}s`).join("\n")}
+Compute:
+1. Estimated IQ (µ=100,σ=15)
+2. Classification
+3. Feedback
+4. Three exercises
+Respond in JSON.
+`;
 
+    // استدعاء Mistral عبر HF Inference API
     const hfRes = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1",
       {
         method: "POST",
         headers: {
@@ -23,32 +48,69 @@ app.post("/api/analyze", async (req, res) => {
     }
 
     const hfData = await hfRes.json();
-    // نُقرر نص الإخراج من عدة احتمالات
-    let textOutput;
-    if (typeof hfData === "string") {
-      textOutput = hfData;
-    } else if (hfData.generated_text) {
-      textOutput = hfData.generated_text;
-    } else if (Array.isArray(hfData) && hfData[0].generated_text) {
-      textOutput = hfData[0].generated_text;
-    } else {
-      return res.status(500).json({ success: false, error: "Unexpected HF response format", raw: hfData });
+    // استخراج النص
+    const textOutput = hfData.generated_text || (Array.isArray(hfData) && hfData[0]?.generated_text);
+    if (!textOutput) {
+      return res.status(500).json({ success: false, error: "No generated_text in response", raw: hfData });
     }
 
-    // نحاول تحويله إلى JSON، وإن فشل نرجّع النص الخام
+    // محاولة تحويل JSON
     let analysis;
     try {
       analysis = JSON.parse(textOutput.trim());
-    } catch (parseErr) {
+    } catch {
       return res.status(200).json({ success: false, error: "Invalid JSON from model", raw: textOutput });
     }
 
-    return res.json({ success: true, analysis });
-
+    res.json({ success: true, analysis });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// … بقية الدوال (/api/chat) نفسها مع نفس منطق استخراج textOutput
+// 5. نقطة الـ Chat
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { messages } = req.body;
+    const prompt = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n") + "\nASSISTANT:";
+
+    const hfRes = await fetch(
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.HF_API_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 200 } })
+      }
+    );
+
+    if (!hfRes.ok) {
+      const errText = await hfRes.text();
+      return res.status(hfRes.status).json({ success: false, error: errText });
+    }
+
+    const hfData = await hfRes.json();
+    const content = hfData.generated_text || (Array.isArray(hfData) && hfData[0]?.generated_text);
+    if (!content) {
+      return res.status(500).json({ success: false, error: "No generated_text in response", raw: hfData });
+    }
+
+    res.json({ success: true, reply: { role: "assistant", content: content.trim() } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 6. نقطة الجذر للتأكد
+app.get("/", (req, res) => {
+  res.send("Mistral-7B Middleware is running.");
+});
+
+// 7. بدء الخادم
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
