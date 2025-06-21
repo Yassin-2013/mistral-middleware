@@ -1,25 +1,22 @@
 // index.js
 
-// 1. استيراد الحزم
 const express = require("express");
 const cors    = require("cors");
 const fetch   = require("node-fetch"); // تأكد أنك ثبت node-fetch@2
 
-// 2. تهيئة Express
 const app = express();
 const port = process.env.PORT || 10000;
 
-// 3. Middleware عامة
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// 4. تسجيل جميع الطلبات (للتعرّف على المسار والمُعطيات)
+// تسجيل الطلبات
 app.use((req, res, next) => {
-  console.log(`→ ${req.method} ${req.url}`);
+  console.log(`→ ${req.method} ${req.url}`, "BODY:", req.body || "");
   next();
 });
 
-// 5. نقطة الـ Analyze
+// POST /api/analyze
 app.post("/api/analyze", async (req, res, next) => {
   try {
     const { userId, answers } = req.body;
@@ -35,16 +32,18 @@ Compute:
 Respond in JSON.
 `;
 
-    // استدعاء Mistral عبر HF Inference API
     const hfRes = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.HF_API_TOKEN}`,
+          Authorization: `Bearer ${process.env.HF_API_TOKEN}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 300 } })
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: { max_new_tokens: 300 }
+        })
       }
     );
 
@@ -54,7 +53,6 @@ Respond in JSON.
     }
 
     const hfData = await hfRes.json();
-    // استخراج النص
     const textOutput =
       typeof hfData === "string"
         ? hfData
@@ -67,7 +65,6 @@ Respond in JSON.
         .json({ success: false, error: "No generated_text in response", raw: hfData });
     }
 
-    // محاولة تحويل JSON
     let analysis;
     try {
       analysis = JSON.parse(textOutput.trim());
@@ -83,7 +80,7 @@ Respond in JSON.
   }
 });
 
-// 6. نقطة الـ Chat
+// POST /api/chat
 app.post("/api/chat", async (req, res, next) => {
   try {
     const { messages } = req.body;
@@ -92,14 +89,17 @@ app.post("/api/chat", async (req, res, next) => {
       "\nASSISTANT:";
 
     const hfRes = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.HF_API_TOKEN}`,
+          Authorization: `Bearer ${process.env.HF_API_TOKEN}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 200 } })
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: { max_new_tokens: 200 }
+        })
       }
     );
 
@@ -127,18 +127,17 @@ app.post("/api/chat", async (req, res, next) => {
   }
 });
 
-// 7. نقطة الجذر للتأكد
+// GET /
 app.get("/", (req, res) => {
   res.send("Mistral-7B Middleware is running.");
 });
 
-// 8. معالج أخطاء مركزي
+// معالج الأخطاء
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ success: false, error: err.message });
 });
 
-// 9. بدء الخادم
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
